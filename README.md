@@ -1,7 +1,7 @@
 # Libuv Practice
 
 ## Project Structure
-- Plea see branch list in github repository.
+- Plea see branch list of this repository.
 
 ## Run Commands
 - Linux
