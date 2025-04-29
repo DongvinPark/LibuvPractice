@@ -65,7 +65,7 @@ static void on_timer_fire(uv_timer_t* handle_ptr)
     uv_close((uv_handle_t*)handle_ptr, on_timer_close);
 }
 
-void delayed_executor_async(uv_loop_t* loop, int delay_in_ms, delayed_task_cb cb, void* arg)
+void async_nonblocking_delayed_executor(uv_loop_t* loop, int delay_in_ms, delayed_task_cb cb, void* arg)
 {
     // 미룬 다음 실행할 태스크 객체를 만든다.
     delayed_task_t* task = (delayed_task_t*)malloc(sizeof(delayed_task_t));

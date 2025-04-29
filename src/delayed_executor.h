@@ -11,6 +11,6 @@
 typedef void (*delayed_task_cb)(void* arg);
 
 // public API : 호출자는 이 함수롤 이용해서 특정 함수를 특정 밀리초만큼 시간이 지난 후에 실행시킨다.
-void delayed_executor_async(uv_loop_t* loop, int delay_in_ms, delayed_task_cb cb, void* arg);
+void async_nonblocking_delayed_executor(uv_loop_t* loop, int delay_in_ms, delayed_task_cb cb, void* arg);
 
 #endif //DELAYED_EXECUTOR_H
