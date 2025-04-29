@@ -1,32 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
 project(LibuvPractice C)
 
-# Use C language version C11
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# Platform-specific libuv handling
-if (WIN32)
-    # DO NOT use find_package(unofficial-libuv)
-    # Just link directly, vcpkg handles include paths
-    include_directories("C:/vcpkg/installed/x64-windows/include")
-    link_directories("C:/vcpkg/installed/x64-windows/debug/lib")
-    set(LIBUV_LIBRARIES uv)
-else()
-    # Use pkg-config on Unix-like systems
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBUV REQUIRED libuv)
-    include_directories(${LIBUV_INCLUDE_DIRS})
+# Use vcpkg toolchain (for include/link directories)
+# IMPORTANT: when running cmake, add -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
 
-    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-        link_directories(${LIBUV_LIBRARY_DIRS})
-    endif()
+find_package(PkgConfig REQUIRED)
 
-    set(LIBUV_LIBRARIES ${LIBUV_LIBRARIES})
-endif()
+# libuv
+pkg_check_modules(LIBUV REQUIRED libuv)
+include_directories(${LIBUV_INCLUDE_DIRS})
+link_directories(${LIBUV_LIBRARY_DIRS})
+
+# glib
+pkg_check_modules(GLIB REQUIRED glib-2.0)
+include_directories(${GLIB_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS})
 
 # Add source files
 add_executable(LibuvPractice src/main.c)
 
-# Link against libuv
-target_link_libraries(LibuvPractice ${LIBUV_LIBRARIES})
+# Link against both libraries
+target_link_libraries(LibuvPractice ${LIBUV_LIBRARIES} ${GLIB_LIBRARIES})
