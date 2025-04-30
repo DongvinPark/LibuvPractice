@@ -11,11 +11,31 @@
 #include "duration_executor.h"
 
 
+
+#ifdef _WIN32
+#include <windows.h>
+
+int64_t get_current_time_millis() {
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+
+    ULARGE_INTEGER uli;
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+
+    // Convert from 100-nanosecond intervals since Jan 1, 1601 to milliseconds since Jan 1, 1970 (Unix epoch)
+    return (int64_t)((uli.QuadPart - 116444736000000000ULL) / 10000);
+}
+
+#else
+#include <time.h>
+
 int64_t get_current_time_millis() {
     struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
+    clock_gettime(CLOCK_REALTIME, &ts);  // or CLOCK_MONOTONIC if you don't need wall time
     return (int64_t)(ts.tv_sec * 1000LL + ts.tv_nsec / 1000000);
 }
+#endif
 
 void run_add_task(void* arg)
 {
