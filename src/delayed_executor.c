@@ -4,6 +4,7 @@
 
 #include "../src/delayed_executor.h"
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 typedef struct
