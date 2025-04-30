@@ -47,6 +47,8 @@ static void on_timer(uv_timer_t* handle)
 
     uv_idle_stop( &(context->idle) );
 
+    // 그냥 막 uv_close를 호출하는 것이 아니라, 현재의 idle 핸들이 closing 중인지를 체크한 다음
+    // 자원 회수를 위한 os_close()를 호출한다. 이건 timer 핸들에 대해서도 마찬가지다.
     if (!uv_is_closing( (uv_handle_t*)&(context->idle) ))
     {
         uv_close( (uv_handle_t*)&(context->idle), on_close);
