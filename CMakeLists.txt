@@ -1,27 +1,26 @@
 cmake_minimum_required(VERSION 3.10)
 project(LibuvPractice C)
 
-# Use C language version to C11
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# Link against libuv
+# Use vcpkg toolchain (for include/link directories)
+# IMPORTANT: when running cmake, add -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+
 find_package(PkgConfig REQUIRED)
+
+# libuv
 pkg_check_modules(LIBUV REQUIRED libuv)
-
 include_directories(${LIBUV_INCLUDE_DIRS})
+link_directories(${LIBUV_LIBRARY_DIRS})
 
-# For macOS
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    # Only needed on macOS
-    link_directories(${LIBUV_LIBRARY_DIRS})
-endif()
+# glib
+pkg_check_modules(GLIB REQUIRED glib-2.0)
+include_directories(${GLIB_INCLUDE_DIRS})
+link_directories(${GLIB_LIBRARY_DIRS})
 
 # Add source files
-add_executable(LibuvPractice
-        src/main.c
-        src/delayed_executor.h
-        src/delayed_executor.c
-)
+add_executable(LibuvPractice src/main.c)
 
-target_link_libraries(LibuvPractice ${LIBUV_LIBRARIES})
+# Link against both libraries
+target_link_libraries(LibuvPractice ${LIBUV_LIBRARIES} ${GLIB_LIBRARIES})
