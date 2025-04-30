@@ -20,7 +20,11 @@ include_directories(${GLIB_INCLUDE_DIRS})
 link_directories(${GLIB_LIBRARY_DIRS})
 
 # Add source files
-add_executable(LibuvPractice src/main.c)
+add_executable(LibuvPractice
+        src/main.c
+        src/delayed_executor.h
+        src/delayed_executor.c
+)
 
 # Link against both libraries
 target_link_libraries(LibuvPractice ${LIBUV_LIBRARIES} ${GLIB_LIBRARIES})
