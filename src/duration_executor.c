@@ -13,6 +13,7 @@ typedef struct
     uv_timer_t timer;
     duration_executor_cb cb;
     void* arg;
+    int ref_count;
 } duration_executor_context_t;
 
 static void on_idle(uv_idle_t* handle)
@@ -29,9 +30,14 @@ static void on_idle(uv_idle_t* handle)
 // 해버리면 윈도우 OS의 libuv에서는 context를 아직 사용 중인데 갑자기 할당 해제를 해버리면서
 // Assertion failed: 0, file C:\vcpkg\buildtrees\libuv\src\v1.49.2-5cffa54d5b.clean\src\win\handle-inl.h, line 160
 // 라는 에러 메시지와 함께 프로그램이 종료돼 버린다.
-static void on_close(uv_handle_t* handler) {
-    duration_executor_context_t* context = (duration_executor_context_t*)handler->data;
-    free(context);
+// 또한, idle과 timer가 모두 동일한 duration_executor_context_t 객체에 접근하므로,
+// on_close() 함수가 두 번째로 호출 되었을 때 딱 1 번만 free를 하기 위해서 ref_count를 도입했다.
+static void on_close(uv_handle_t* handle) {
+    duration_executor_context_t* context = (duration_executor_context_t*)handle->data;
+    context->ref_count--;
+    if (context->ref_count == 0) {
+        free(context);
+    }
 }
 
 static void on_timer(uv_timer_t* handle)
@@ -43,7 +49,7 @@ static void on_timer(uv_timer_t* handle)
 
     if (!uv_is_closing( (uv_handle_t*)&(context->idle) ))
     {
-        uv_close( (uv_handle_t*)&(context->idle), NULL);
+        uv_close( (uv_handle_t*)&(context->idle), on_close);
     }
 
     if (!uv_is_closing( (uv_handle_t*)&(context->timer) ))
@@ -58,6 +64,7 @@ void async_nonblocking_duration_executor(
     duration_executor_context_t* ctx_ptr = malloc(sizeof(duration_executor_context_t));
     ctx_ptr->cb = cb;
     ctx_ptr->arg = arg;
+    ctx_ptr->ref_count = 2; // one for idle and one for timer
 
     uv_idle_init(loop, &(ctx_ptr->idle) );
     ctx_ptr->idle.data = ctx_ptr; // libuv 이벤트 루프 내부에서 duration_executor_context_t 객체에 접근할 수 있는 수단을 제공해야 한다.
