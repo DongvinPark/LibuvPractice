@@ -22,8 +22,6 @@ link_directories(${GLIB_LIBRARY_DIRS})
 # Add source files
 add_executable(LibuvPractice
         src/main.c
-        src/delayed_executor.h
-        src/delayed_executor.c
 )
 
 # Link against both libraries

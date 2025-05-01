@@ -1,60 +1,85 @@
 //
 // Created by dongvin on 25. 4. 27.
 //
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h> // for int64_t
+#include <time.h>
+#include <inttypes.h> // to print int64_t value correctly in printf() function.
 #include <uv.h>
 
-#include "delayed_executor.h"
-
-void my_task_1(void* arg)
+typedef struct
 {
-    printf("Delayed task executed! Time = %s\n", (char*)arg);
+    uv_idle_t idle;
+    uv_timer_t timer;
+    int work_counter;
+
+} task_context_t;
+
+int64_t get_current_time_millis() {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (int64_t)(ts.tv_sec * 1000LL + ts.tv_nsec / 1000000);
 }
 
-void my_task_2(void* arg)
+void stop_task(uv_timer_t* handle)
 {
-    printf("Delayed task executed! Time = %s\n", (char*)arg);
+    task_context_t* ctx = (task_context_t*)handle->data;
+    printf("Stopping task after timer! current time millis : %" PRId64 "\n", get_current_time_millis());
+
+    uv_idle_stop(&ctx->idle);
+    uv_close((uv_handle_t*)&ctx->idle, NULL);
+    uv_close((uv_handle_t*)&ctx->timer, NULL);
 }
 
-void my_task_3(void* arg)
+void run_task(uv_idle_t* handle)
 {
-    printf("Delayed task executed! Time = %s\n", (char*)arg);
+    task_context_t* ctx = (task_context_t*)handle->data;
+
+    for (int i = 0; i < 1000; i++)
+    {
+        ctx->work_counter++;
+    }
 }
 
-/*
-1, 2, 4초 딜레이 후 실행되는 async non-blocking 태스크 3 개를 libuv를 이용해서 실행시킨다.
-실행 결과는 아래와 같다. 로그를 보면, 태스크이 실행 완료보다,
-태스크 3 개를 libuv에 던져 놓는(즉, dispatching) 것을 완료했다는 로그가 더 빨리 뜨는 것을 알 수 있다.
-
-/Users/dongvin99/Documents/LibuvPractice/cmake-build-debug/LibuvPractice
-Starting loop...
-Setting tasks is done!
-
-Delayed task executed! Time = I'm the first!
-time to exit timer! exit time : UTC2025_04_29T04_13_53.
-
-Delayed task executed! Time = I'm the second!
-time to exit timer! exit time : UTC2025_04_29T04_13_54.
-
-Delayed task executed! Time = I'm the third!
-time to exit timer! exit time : UTC2025_04_29T04_13_56.
-
-Event loop exited.
-
-Process finished with exit code 0
-
- */
-int main() {
+int main()
+{
     uv_loop_t* loop = uv_default_loop();
-    printf("Starting loop...\n");
 
-    async_nonblocking_delayed_executor(loop, 1000, my_task_1, "I'm the first!");
-    async_nonblocking_delayed_executor(loop, 2000, my_task_2, "I'm the second!");
-    async_nonblocking_delayed_executor(loop, 4000, my_task_3, "I'm the third!");
-    printf("Setting tasks is done!\n\n");
+    task_context_t* ctx = malloc(sizeof(task_context_t));
 
+    uv_idle_init(loop, &ctx->idle);
+    ctx->idle.data = ctx;
+    uv_idle_start(&ctx->idle, run_task);
+
+    uv_timer_init(loop, &ctx->timer);
+    ctx->timer.data = ctx;
+    uv_timer_start(&ctx->timer, stop_task, 3000, 0);
+
+    // int64_t 타입 값을 정확하게 출력하려면, %d 나 %ld 같은 거 쓰면 안 된다.
+    printf("Starting task for 3000ms ... current time millis : %" PRId64 "\n", get_current_time_millis());
     uv_run(loop, UV_RUN_DEFAULT);
 
-    printf("Event loop exited.\n");
-
+    free(ctx);
     return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
