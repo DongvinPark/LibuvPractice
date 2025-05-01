@@ -22,6 +22,8 @@ link_directories(${GLIB_LIBRARY_DIRS})
 # Add source files
 add_executable(LibuvPractice
         src/main.c
+        src/duration_executor.h
+        src/duration_executor.c
 )
 
 # Link against both libraries
