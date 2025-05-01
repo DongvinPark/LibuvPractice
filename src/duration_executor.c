@@ -44,10 +44,10 @@ void async_nonblocking_duration_executor(
     ctx_ptr->arg = arg;
 
     uv_idle_init(loop, &(ctx_ptr->idle) );
-    ctx_ptr->idle.data = ctx_ptr;
+    ctx_ptr->idle.data = ctx_ptr; // libuv 이벤트 루프 내부에서 duration_executor_context_t 객체에 접근할 수 있는 수단을 제공해야 한다.
     uv_idle_start( &(ctx_ptr->idle), on_idle);
 
     uv_timer_init(loop, &(ctx_ptr->timer) );
-    ctx_ptr->timer.data = ctx_ptr;
+    ctx_ptr->timer.data = ctx_ptr; // libuv 이벤트 루프 내부에서 duration_executor_context_t 객체에 접근할 수 있는 수단을 제공해야 한다.
     uv_timer_start( &(ctx_ptr->timer), on_timer, duration_ms, 0);
 }
