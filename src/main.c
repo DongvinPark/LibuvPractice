@@ -47,9 +47,9 @@ int main()
     int64_t counter = 0L;
     int64_t* counter_ptr = &counter;
     async_nonblocking_duration_executor(loop, 3000, run_add_task, counter_ptr);
-    uv_run(loop, UV_RUN_DEFAULT);
     // int64_t 타입 값을 정확하게 출력하려면, %d 나 %ld 같은 거 쓰면 안 된다.
     printf("Starting task for 3000ms ... current time millis : %" PRId64 "\n", get_current_time_millis());
+    uv_run(loop, UV_RUN_DEFAULT);
 
     printf("Add task result : %" PRId64 "\n", counter);
     printf("Exit time : %" PRId64 "\n", get_current_time_millis());
