@@ -2,35 +2,37 @@
 // Created by dongvin on 25. 4. 27.
 //
 #include <stdio.h>
-#include <stdlib.h>
 #include <uv.h>
-#include <glib.h>
+
+#include "../src/util/util.h"
+#include "../src/periodic_task.h"
+#include "../src/delayed_executor/delayed_executor.h"
+
+void my_task_callback(void* userdata)
+{
+    int* counter = (int*)userdata;
+    (*counter)++;
+    char time_str[32];
+    get_current_utc_time_string(time_str, sizeof(time_str));
+    printf("Task called! count : %d, time : %s\n", *counter, time_str);
+}
+
+void quit_my_task(void* arg)
+{
+    periodic_task_t* task = (periodic_task_t*)arg;
+    periodic_task_stop(task);
+}
 
 int main() {
-    g_print("GLib is working!\n");
+    uv_loop_t* loop = uv_default_loop();
+    int counter = 0;
 
-    // Create a simple hash table
-    GHashTable *table = g_hash_table_new(g_str_hash, g_str_equal);
+    periodic_task_t* task = periodic_task_create(loop, 1000);
+    periodic_task_set_callback(task, my_task_callback, &counter);
+    periodic_task_start(task);
 
-    g_hash_table_insert(table, "name", "Alice");
-    g_hash_table_insert(table, "language", "C with GLib");
+    async_nonblocking_delayed_executor(loop, 10000, quit_my_task, task);
 
-    const char *name = g_hash_table_lookup(table, "name");
-    const char *lang = g_hash_table_lookup(table, "language");
-
-    printf("Name: %s\n", name);
-    printf("Language: %s\n", lang);
-
-    g_hash_table_destroy(table);
-
-    printf("Libuv Test Starts!\n");
-    uv_loop_t *loop = malloc(sizeof(uv_loop_t));
-    uv_loop_init(loop);
-
-    printf("Now quitting.\n");
     uv_run(loop, UV_RUN_DEFAULT);
-
-    uv_loop_close(loop);
-    free(loop);
     return 0;
 }
