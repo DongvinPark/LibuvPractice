@@ -21,8 +21,8 @@ link_directories(${GLIB_LIBRARY_DIRS})
 
 # Add source files
 add_executable(LibuvPractice src/main.c
-        src/periodic_task.c
-        src/periodic_task.h
+        src/periodic_executor/periodic_task.c
+        src/periodic_executor/periodic_task.h
         src/delayed_executor/delayed_executor.h
         src/delayed_executor/delayed_executor.c
         src/util/util.h

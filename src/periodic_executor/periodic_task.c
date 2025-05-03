@@ -1,7 +1,7 @@
 //
 // Created by dongvin on 25. 5. 3.
 //
-#include "periodic_task.h"
+#include "../periodic_executor/periodic_task.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,7 +16,7 @@ struct periodic_task
     bool is_task_set;
 };
 
-// internal call back - for periotic execution loop
+// 즉, 재귀적으로 uv_timer_start()를 호출해서 특정 함수의 호출이 주기적으로 반복되게 만든다.
 static void on_timer_tick(uv_timer_t* handle)
 {
     periodic_task_t* task = (periodic_task_t*)handle->data;
