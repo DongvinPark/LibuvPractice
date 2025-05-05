@@ -4,10 +4,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <uv.h>
-#include <unistd.h>
+#ifdef __APPLE__
+    #include <unistd.h>
+#elif __linux__
+    #include <unistd.h>
+#endif
 
 #define BUFFER_SIZE 5
+
+// for linux & macOS
 #define FILE_PATH "/Users/dongvin99/Documents/LibuvPractice/src/example.txt"
+
+// for window
+//#define FILE_PATH "C:\\dev\\LibuvPractice\\src\\example.txt"
 
 // 파일 작업 컨텍스트 객체
 typedef struct
@@ -130,7 +139,9 @@ libuv에서 파일 리딩 작업은 항상 worker thread pool에서 처리하기
 05-async-file-read 브랜치에서 구현한 것과 같이 명시적으로 uv_queue_work() 를 통해서 worker threa pool에게
 직접 태스크들을 전달해줄 필요가 없다.
 
-둘 중 누가 더 성능이 좋은지는 실제 테스트를 해봐야 알 수 있을 듯 하다.
+게다가, window에서는 POSIX API들을 사용할 수 없으므로, 05-async-file-read 브랜치는 윈도우에서는 작동하지 않는다.
+
+05 브랜치와 06 블내치 중 누가 파일 리딩 속도가 더 빠른지는 실제 테스트를 해봐야 알 수 있을 듯하다.
  */
 int main() {
     // 파일 작업 컨텍스트 객체를 할당한다.
