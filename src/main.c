@@ -2,12 +2,20 @@
 // Created by dongvin on 25. 4. 27.
 //
 #include <stdio.h>
-#include <stdlib.h>
 #include <uv.h>
 #include <glib.h>
+#include <unistd.h> // to use 'read()' function
+#include <errno.h> // to use 'errno'
 
 #define BUFFER_SIZE 5
-#define FILE_PATH "/home/dongvin/Documents/LibuvPractice/src/example.txt"
+
+// for ubuntu linux
+//#define FILE_PATH "/home/dongvin/Documents/LibuvPractice/src/example.txt"
+
+// for macOS
+#define FILE_PATH "/Users/dongvin99/Documents/LibuvPractice/src/example.txt"
+
+// for window
 
 typedef struct
 {
@@ -16,6 +24,7 @@ typedef struct
     uv_buf_t buffer;
     uv_loop_t* loop;
     int fd;
+    ssize_t read_bytes;
 } file_context_t;
 
 // 'work callback' and 'after work callback' for libuv's thread pool
@@ -23,10 +32,12 @@ typedef struct
 void work_cb(uv_work_t* req)
 {
     file_context_t* ctx = (file_context_t*)req->data;
-    ssize_t result = uv_fs_read(ctx->loop, &(ctx->read_req), ctx->fd, &(ctx->buffer), 1, -1, NULL);
-    if (result < 0)
+    ctx->read_bytes = read(ctx->fd, ctx->buffer.base, ctx->buffer.len);
+
+    if (ctx->read_bytes < 0)
     {
-        fprintf(stderr, "Read error: %s\n", uv_strerror((int)result));
+        int err = errno;
+        fprintf(stderr, "Read error: %s\n", uv_strerror(err));
     }
 }
 
@@ -36,7 +47,7 @@ void after_work_cb(uv_work_t* req, int status)
 {
     file_context_t *ctx = (file_context_t *)req->data;
 
-    if (ctx->read_req.result < 0)
+    if (ctx->read_bytes < 0)
     {   // Error
         fprintf(stderr, "Async read failed: %s\n", uv_strerror((int)ctx->read_req.result));
         uv_fs_close(ctx->loop, &ctx->open_req, ctx->fd, NULL);
@@ -46,7 +57,7 @@ void after_work_cb(uv_work_t* req, int status)
         printf("!!! buffer, ctx, req freed with error !!!\n");
         return;
     }
-    else if (ctx->read_req.result == 0)
+    else if (ctx->read_bytes == 0)
     {
         // EOF. cleanup
         uv_fs_close(ctx->loop, &ctx->open_req, ctx->fd, NULL);
@@ -60,7 +71,7 @@ void after_work_cb(uv_work_t* req, int status)
     {   // print elements in buffer and enqueue next async nonblocking reading task.
 
         // Ensure buffer is null-terminated before using strtok
-        ctx->buffer.base[ctx->read_req.result] = '\0';
+        ctx->buffer.base[ctx->read_bytes] = '\0';
 
         // Print lines from buffer
         char *line = strtok(ctx->buffer.base, "\n");
