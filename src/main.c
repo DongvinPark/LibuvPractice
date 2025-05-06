@@ -4,33 +4,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <uv.h>
-#include <glib.h>
+
+uv_loop_t* loop;
+uv_signal_t sigint_handle;
+
+void on_sigint(uv_signal_t* handle, int signum)
+{
+    printf("\nReceived SIGINT (Ctrl + C), shutting down gracefully...\n");
+
+    // stop the signal handler
+    uv_signal_stop(handle);
+
+    // stop the loop
+    uv_stop(loop);
+    printf("\nHandler completed!\n");
+}
 
 int main() {
-    g_print("GLib is working!\n");
+    loop = uv_default_loop();
 
-    // Create a simple hash table
-    GHashTable *table = g_hash_table_new(g_str_hash, g_str_equal);
+    uv_signal_init(loop, &sigint_handle);
+    uv_signal_start(&sigint_handle, on_sigint, SIGINT);
 
-    g_hash_table_insert(table, "name", "Alice");
-    g_hash_table_insert(table, "language", "C with GLib");
-
-    const char *name = g_hash_table_lookup(table, "name");
-    const char *lang = g_hash_table_lookup(table, "language");
-
-    printf("Name: %s\n", name);
-    printf("Language: %s\n", lang);
-
-    g_hash_table_destroy(table);
-
-    printf("Libuv Test Starts!\n");
-    uv_loop_t *loop = malloc(sizeof(uv_loop_t));
-    uv_loop_init(loop);
-
-    printf("Now quitting.\n");
+    printf("Libuv server starts!\n");
     uv_run(loop, UV_RUN_DEFAULT);
 
+    printf("\nCleaning up resources...\n");
     uv_loop_close(loop);
-    free(loop);
+
     return 0;
 }
